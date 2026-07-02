@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Kalkulator STP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#16212C;
+    --bg-alt:#1E2E3B;
+    --paper:#F3ECDA;
+    --paper-alt:#EAE1C8;
+    --ink:#1E2A38;
+    --ink-soft:#5B6B7A;
+    --rule-gold:#B8912F;
+    --stamp-red:#8C2F22;
+    --good:#3F6E52;
+    --line:#D8CFB0;
+    --line-dark:#3A4B5A;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'IBM Plex Sans',sans-serif;
+    background:var(--bg);
+    color:var(--paper);
+    padding:32px 20px 60px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;}
+  header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+    border-bottom:1px solid var(--line-dark);
+    padding-bottom:18px;
+    margin-bottom:28px;
+  }
+  header h1{
+    font-family:'Source Serif 4',serif;
+    font-weight:600;
+    font-size:28px;
+    letter-spacing:0.3px;
+    margin:0;
+    color:var(--paper);
+  }
+  header .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--rule-gold);
+    margin-bottom:6px;
+  }
+  header .sub{
+    font-size:13px;
+    color:#9FB1C0;
+    max-width:420px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:22px;
+  }
+  @media (max-width:820px){ .grid{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:2px;
+    padding:26px 26px 22px;
+    position:relative;
+    box-shadow:0 12px 30px -14px rgba(0,0,0,0.5);
+  }
+  .card::before{
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;
+    height:4px;
+    background:linear-gradient(90deg,var(--rule-gold),var(--stamp-red) 130%);
+  }
+  .card h2{
+    font-family:'Source Serif 4',serif;
+    font-size:16px;
+    font-weight:600;
+    margin:0 0 18px;
+    padding-bottom:10px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .card h2 span.tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    letter-spacing:1.5px;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    font-weight:500;
+  }
+
+  label{
+    display:block;
+    font-size:11.5px;
+    letter-spacing:0.4px;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+    font-weight:500;
+  }
+  .field{margin-bottom:14px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  input,select{
+    width:100%;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13.5px;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--ink);
+    border-radius:2px;
+  }
+  select{font-family:'IBM Plex Sans',sans-serif;}
+  input:focus,select:focus{
+    outline:none;
+    border-color:var(--stamp-red);
+    box-shadow:0 0 0 3px rgba(140,47,34,0.12);
+  }
+
+  .btn{
+    width:100%;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    padding:12px 14px;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    letter-spacing:0.3px;
+    border-radius:2px;
+    cursor:pointer;
+    margin-top:6px;
+  }
+  .btn:hover{background:#0f1822;}
+  .btn.secondary{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink);
+    font-weight:500;
+  }
+  .btn.secondary:hover{border-color:var(--stamp-red);color:var(--stamp-red);}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+  /* Ledger / result card */
+  .ledger-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:9px 0;
+    border-bottom:1px dashed var(--line);
+    font-size:13px;
+    gap:12px;
+  }
+  .ledger-row:last-child{border-bottom:none;}
+  .ledger-row .k{color:var(--ink-soft);}
+  .ledger-row .v{
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:500;
+    text-align:right;
+  }
+  .ledger-row.total .v{font-size:16px;font-weight:600;color:var(--stamp-red);}
+  .ledger-row.total .k{font-weight:600;color:var(--ink);}
+
+  .empty-state{
+    font-size:13px;
+    color:var(--ink-soft);
+    padding:30px 10px;
+    text-align:center;
+    font-style:italic;
+  }
+
+  .warn{
+    font-size:12px;
+    background:#F7E4D8;
+    border:1px solid #E0B79A;
+    color:#8C4A22;
+    padding:10px 12px;
+    border-radius:2px;
+    margin-top:10px;
+  }
+
+  /* Stamp */
+  .stamp-zone{
+    display:flex;
+    justify-content:center;
+    margin:18px 0 6px;
+  }
+  .stamp{
+    width:118px;height:118px;
+    border-radius:50%;
+    border:3px solid var(--stamp-red);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transform:rotate(-9deg);
+    position:relative;
+    opacity:0.9;
+  }
+  .stamp::before{
+    content:'';
+    position:absolute;
+    inset:8px;
+    border:1px dashed var(--stamp-red);
+    border-radius:50%;
+  }
+  .stamp .txt{
+    font-family:'Source Serif 4',serif;
+    font-weight:700;
+    color:var(--stamp-red);
+    font-size:13px;
+    letter-spacing:1.5px;
+    text-align:center;
+    line-height:1.3;
+  }
+  .stamp.good{border-color:var(--good);}
+  .stamp.good::before{border-color:var(--good);}
+  .stamp.good .txt{color:var(--good);}
+
+  /* History table */
+  .hist-card{margin-top:22px;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  thead th{
+    text-align:left;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    border-bottom:1px solid var(--ink);
+    padding:6px 8px;
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:8px;
+    border-bottom:1px solid var(--line);
+    font-family:'IBM Plex Mono',monospace;
+    white-space:nowrap;
+  }
+  tbody tr:nth-child(even){background:var(--paper-alt);}
+  .del-btn{
+    background:none;border:none;color:var(--stamp-red);
+    cursor:pointer;font-size:15px;line-height:1;
+    font-family:'IBM Plex Sans',sans-serif;
+  }
+  .table-scroll{overflow-x:auto;}
+  .num{text-align:right;}
+  .diff-ok{color:var(--good);}
+  .diff-bad{color:var(--stamp-red);font-weight:600;}
+
+  /* Rate table */
+  .rate-toggle{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--rule-gold);
+    cursor:pointer;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    background:none;border:none;
+    display:flex;align-items:center;gap:6px;
+    padding:0;margin-top:24px;
+  }
+  .rate-toggle .arrow{transition:transform .2s;}
+  .rate-toggle.open .arrow{transform:rotate(90deg);}
+  .rate-panel{display:none;margin-top:14px;}
+  .rate-panel.open{display:block;}
+  .add-rate-row{display:grid;grid-template-columns:1.1fr repeat(5,1fr) auto;gap:8px;align-items:end;margin-bottom:16px;}
+  .add-rate-row label{font-size:10px;}
+  .add-rate-row input{padding:7px 8px;font-size:12px;}
+  .add-rate-row button{padding:8px 12px;font-size:12px;white-space:nowrap;}
+
+  footer{
+    text-align:center;
+    color:#5B6B7A;
+    font-size:11px;
+    margin-top:40px;
+    font-family:'IBM Plex Mono',monospace;
+    letter-spacing:0.5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="eyebrow">Absolution Registered Tax Consultant</div>
+      <h1>Kalkulator STP</h1>
+      <div class="sub">Perhitungan bunga keterlambatan pembayaran pajak berdasarkan tarif KMK bulanan</div>
+    </div>
+  </header>
+
+  <div class="disclaimer">
+      <strong>Disclaimer</strong><br><br>
+
+      Aplikasi ini merupakan alat bantu perhitungan yang dikembangkan secara independen untuk membantu estimasi perhitungan bunga Surat Tagihan Pajak (STP). Logika perhitungan dalam aplikasi ini disusun berdasarkan peraturan perpajakan yang berlaku serta telah divalidasi terhadap sejumlah Surat Tagihan Pajak (STP) yang telah diterbitkan.<br><br>
+
+      Aplikasi ini <strong>bukan merupakan aplikasi resmi Direktorat Jenderal Pajak (DJP)</strong> dan tidak memiliki afiliasi dengan Direktorat Jenderal Pajak maupun instansi pemerintah lainnya. Hasil perhitungan yang ditampilkan merupakan estimasi berdasarkan logika yang diterapkan dalam aplikasi dan dapat berbeda apabila terdapat perubahan peraturan, kebijakan, atau mekanisme perhitungan yang digunakan oleh DJP.<br><br>
+
+      Pengguna tetap bertanggung jawab untuk melakukan verifikasi terhadap hasil perhitungan dengan mengacu pada peraturan perpajakan yang berlaku serta dokumen resmi yang diterbitkan oleh Direktorat Jenderal Pajak.
+		<div style="margin-top:15px;font-size:12px;color:#666;border-top:1px solid #ddd;padding-top:10px;">
+			<strong>Versi 1.0</strong><br>
+			Terakhir diperbarui: Juli 2026<br>
+			KMK Bunga: Juli 2026<br>
+			Logika perhitungan telah diuji menggunakan STP PPN dan PPh.
+		</div>
+  </div>
+
+
+  <div class="grid">
+    <!-- FORM -->
+    <div class="card">
+      <h2>Data Pajak <span class="tag">Input</span></h2>
+
+      <div class="row2">
+        <div class="field">
+          <label>Jenis Pajak</label>
+          <select id="jenisPajak">
+            <option value="PPN">PPN</option>
+            <option value="OTHER">PPh</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>No. STP (opsional)</label>
+          <input type="text" id="noSTP" placeholder="00xxx/107/25/...">
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Masa Pajak</label>
+          <input type="month" id="masaPajak">
+        </div>
+        <div class="field">
+          <label>Tanggal Bayar</label>
+          <input type="date" id="tglBayar">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Pokok (Rp)</label>
+        <input type="number" id="pokok" placeholder="0" min="0" step="1">
+      </div>
+
+      <div class="field">
+        <label>Jenis Bunga / Sanksi</label>
+        <select id="jenisSanksi">
+          <option value="1">1 — Pasal 19 ayat (1)-(3)</option>
+          <option value="2" selected>2 — Pasal 8 ayat (2),(2a), Pasal 9 ayat (2a),(2b), Pasal 14 ayat (3)</option>
+          <option value="3">3 — Pasal 8 ayat (5)</option>
+          <option value="4">4 — Pasal 13 ayat (2) dan (2a)</option>
+          <option value="5">5 — Pasal 13 ayat (3b)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Nilai STP Aktual dari Surat (opsional, untuk cek selisih)</label>
+        <input type="number" id="nilaiSTP" placeholder="0" min="0" step="1">
+      </div>
+
+      <button class="btn" id="btnHitung">Hitung Bunga</button>
+    </div>
+
+    <!-- RESULT -->
+    <div class="card">
+      <h2>Hasil Perhitungan <span class="tag" id="resultTag">Ledger</span></h2>
+      <div id="resultBody">
+        <div class="empty-state">Isi data di sebelah kiri, lalu klik "Hitung Bunga".</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="card hist-card">
+    <h2>Riwayat STP <span class="tag" id="histCount">0 entri</span></h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Jenis</th><th>Masa Pajak</th><th>No STP</th><th>Jatuh Tempo</th>
+            <th>Tgl Bayar</th><th class="num">Pokok</th><th class="num">Bln Telat</th>
+            <th class="num">Tarif</th><th class="num">Bunga</th><th class="num">Nilai STP</th>
+            <th class="num">Selisih</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="histBody">
+        </tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="histEmpty">Belum ada riwayat tersimpan.</div>
+  </div>
+
+  <!-- RATE TABLE -->
+  <button class="rate-toggle" id="rateToggle"><span class="arrow">&#9656;</span> Tabel Tarif KMK</button>
+  <div class="card rate-panel" id="ratePanel">
+    <h2>Tarif Bunga KMK per Bulan <span class="tag">Editable</span></h2>
+    <div class="add-rate-row">
+      <div><label>Bulan (YYYY-MM)</label><input type="month" id="addYm"></div>
+      <div><label>Tarif 1 (%)</label><input type="number" step="0.0001" id="addR1"></div>
+      <div><label>Tarif 2 (%)</label><input type="number" step="0.0001" id="addR2"></div>
+      <div><label>Tarif 3 (%)</label><input type="number" step="0.0001" id="addR3"></div>
+      <div><label>Tarif 4 (%)</label><input type="number" step="0.0001" id="addR4"></div>
+      <div><label>Tarif 5 (%)</label><input type="number" step="0.0001" id="addR5"></div>
+      <button class="btn secondary" id="btnAddRate">+ Tambah / Ubah</button>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Bulan</th><th class="num">1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th><th class="num">5</th><th></th></tr>
+        </thead>
+        <tbody id="rateBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>© 2026 Absolution Registered Tax Consultant<br>Perhitungan dilakukan secara lokal di browser Anda. Tidak ada data yang dikirim ke server.</div>
+
+<script>
+const DEFAULT_RATES = {
+  "2025-01":[0.0058,0.0100,0.0141,0.0183,0.0225],
+  "2025-02":[0.0059,0.0101,0.0143,0.0184,0.0226],
+  "2025-03":[0.0057,0.0099,0.0141,0.0182,0.0224],
+  "2025-04":[0.0058,0.0100,0.0141,0.0183,0.0225],
+  "2025-05":[0.0058,0.0100,0.0142,0.0183,0.0225],
+  "2025-06":[0.0057,0.0099,0.0141,0.0182,0.0224],
+  "2025-07":[0.0058,0.0100,0.0141,0.0183,0.0225],
+  "2025-08":[0.0055,0.0096,0.0138,0.0180,0.0221],
+  "2025-09":[0.0054,0.0095,0.0137,0.0179,0.0220],
+  "2025-10":[0.0053,0.0095,0.0136,0.0178,0.0220],
+  "2025-11":[0.0051,0.0092,0.0134,0.0176,0.0217],
+  "2025-12":[0.0051,0.0093,0.0135,0.0176,0.0218],
+  "2026-01":[0.0052,0.0093,0.0135,0.0177,0.0218],
+  "2026-02":[0.0051,0.0092,0.0134,0.0176,0.0217],
+  "2026-03":[0.0053,0.0095,0.0137,0.0178,0.0220],
+  "2026-04":[0.0056,0.0098,0.0139,0.0181,0.0223],
+  "2026-05":[0.0055,0.0097,0.0139,0.0180,0.0222],
+  "2026-06":[0.0056,0.0098,0.0139,0.0181,0.0223],
+  "2026-07":[0.0058,0.0100,0.0142,0.0183,0.0225]
+};
+
+let rates = {};
+let history = [];
+
+function rupiah(n){
+  if(n===null||n===undefined||isNaN(n)) return '-';
+  return 'Rp' + Math.round(n).toLocaleString('id-ID');
+}
+function pct(n){
+  return (n*100).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}) + '%';
+}
+function ymOf(date){
+  return date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0');
+}
+function fmtDate(date){
+  return date.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+}
+function eomonth(date, monthsToAdd){
+  return new Date(date.getFullYear(), date.getMonth()+monthsToAdd+1, 0);
+}
+function monthsBetween(start,end){
+  let m = (end.getFullYear()-start.getFullYear())*12 + (end.getMonth()-start.getMonth());
+  if(end.getDate() < start.getDate()) m--;
+  return m;
+}
+
+async function loadStorage(){
+  try{
+    const r = await window.storage.get('kmk-rates');
+    rates = r ? JSON.parse(r.value) : {...DEFAULT_RATES};
+  }catch(e){ rates = {...DEFAULT_RATES}; }
+  try{
+    const h = await window.storage.get('stp-history');
+    history = h ? JSON.parse(h.value) : [];
+  }catch(e){ history = []; }
+  renderRateTable();
+  renderHistory();
+}
+async function saveRates(){
+  try{ await window.storage.set('kmk-rates', JSON.stringify(rates)); }catch(e){}
+}
+async function saveHistory(){
+  try{ await window.storage.set('stp-history', JSON.stringify(history)); }catch(e){}
+}
+
+function calcDueDate(jenis, masaDate){
+  if(jenis === 'PPN'){
+    return eomonth(masaDate, 1);
+  }
+  const d = eomonth(masaDate, 0);
+  d.setDate(d.getDate()+15);
+  return d;
+}
+
+function computeResult(){
+  const jenis = document.getElementById('jenisPajak').value;
+  const noSTP = document.getElementById('noSTP').value;
+  const masaVal = document.getElementById('masaPajak').value;
+  const bayarVal = document.getElementById('tglBayar').value;
+  const pokok = parseFloat(document.getElementById('pokok').value);
+  const sanksi = parseInt(document.getElementById('jenisSanksi').value,10);
+  const nilaiSTPInput = document.getElementById('nilaiSTP').value;
+  const nilaiSTP = nilaiSTPInput === '' ? null : parseFloat(nilaiSTPInput);
+
+  if(!masaVal || !bayarVal || isNaN(pokok)){
+    alert('Lengkapi Masa Pajak, Tanggal Bayar, dan Pokok terlebih dahulu.');
+    return null;
+  }
+
+  const [my, mm] = masaVal.split('-').map(Number);
+  const masaDate = new Date(my, mm-1, 1);
+  const bayarDate = new Date(bayarVal + 'T00:00:00');
+
+  const dueDate = calcDueDate(jenis, masaDate);
+
+  let monthsLate = 0;
+  if(bayarDate >= dueDate){
+    monthsLate = monthsBetween(dueDate, bayarDate) + 1;
+  }
+
+  // PPN: rate is taken from the month after the due date's month.
+  // Other tax types: the due date already falls within the first late month,
+  // so the rate is taken from the due date's own month.
+  const lookupDate = (jenis === 'PPN')
+    ? new Date(dueDate.getFullYear(), dueDate.getMonth()+1, 1)
+    : new Date(dueDate.getFullYear(), dueDate.getMonth(), 1);
+  const lookupYm = ymOf(lookupDate);
+  const rateRow = rates[lookupYm];
+  const rate = rateRow ? rateRow[sanksi-1] : null;
+
+  const bunga = (rate !== null) ? pokok * monthsLate * rate : null;
+  const selisih = (nilaiSTP !== null && bunga !== null) ? (nilaiSTP - bunga) : null;
+
+  return {
+    id: Date.now(),
+    jenis, noSTP, masaYm: masaVal, bayarVal,
+    pokok, sanksi, dueDate: dueDate.toISOString(), bayarDate: bayarDate.toISOString(),
+    monthsLate, rate, bunga, nilaiSTP, selisih, lookupYm
+  };
+}
+
+let lastResult = null;
+
+function renderResult(res){
+  const body = document.getElementById('resultBody');
+  const tag = document.getElementById('resultTag');
+  if(!res){ return; }
+  tag.textContent = res.jenis === 'PPN' ? 'PPN' : 'PPh / Lainnya';
+
+  let warn = '';
+  if(res.rate === null){
+    warn = `<div class="warn">Tarif KMK untuk periode <strong>${res.lookupYm}</strong> belum ada di tabel. Tambahkan di bagian "Tabel Tarif KMK" di bawah, lalu hitung ulang.</div>`;
+  }
+
+  let stampHtml = '';
+  if(res.selisih !== null){
+    const isGood = Math.abs(res.selisih) < 1;
+    stampHtml = `
+      <div class="stamp-zone">
+        <div class="stamp ${isGood?'good':''}">
+          <div class="txt">${isGood ? 'SESUAI' : 'ADA<br>SELISIH'}</div>
+        </div>
+      </div>`;
+  }
+
+  body.innerHTML = `
+    <div class="ledger-row"><span class="k">Tanggal Jatuh Tempo</span><span class="v">${fmtDate(new Date(res.dueDate))}</span></div>
+    <div class="ledger-row"><span class="k">Jumlah Bulan Terlambat</span><span class="v">${res.monthsLate}</span></div>
+    <div class="ledger-row">
+    <span class="k">Tarif Bunga (${res.sanksi})</span>
+    <span class="v">${res.rate!==null?pct(res.rate):'—'}</span>
+	</div>
+
+	<div class="ledger-row">
+		<span class="k">Dasar Tarif KMK</span>
+		<span class="v">${res.lookupYm}</span>
+	</div>
+    <div class="ledger-row total"><span class="k">Bunga</span><span class="v">${res.bunga!==null?rupiah(res.bunga):'—'}</span></div>
+    ${res.nilaiSTP!==null ? `
+    <div class="ledger-row"><span class="k">Nilai STP Aktual</span><span class="v">${rupiah(res.nilaiSTP)}</span></div>
+    <div class="ledger-row"><span class="k">Selisih</span><span class="v ${Math.abs(res.selisih)<1?'diff-ok':'diff-bad'}">${rupiah(res.selisih)}</span></div>
+    ` : ''}
+    ${warn}
+    ${stampHtml}
+    <button class="btn secondary" id="btnSimpan" ${res.bunga===null?'disabled':''}>Simpan ke Riwayat</button>
+  `;
+  document.getElementById('btnSimpan').addEventListener('click', async ()=>{
+    history.unshift(res);
+    await saveHistory();
+    renderHistory();
+  });
+}
+
+function renderHistory(){
+  const tbody = document.getElementById('histBody');
+  const empty = document.getElementById('histEmpty');
+  document.getElementById('histCount').textContent = history.length + ' entri';
+  if(history.length === 0){
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = history.map(h => `
+    <tr data-id="${h.id}">
+      <td>${h.jenis}</td>
+      <td>${h.masaYm}</td>
+      <td>${h.noSTP || '-'}</td>
+      <td>${fmtDate(new Date(h.dueDate))}</td>
+      <td>${fmtDate(new Date(h.bayarDate))}</td>
+      <td class="num">${rupiah(h.pokok)}</td>
+      <td class="num">${h.monthsLate}</td>
+      <td class="num">${h.rate!==null?pct(h.rate):'—'}</td>
+      <td class="num">${h.bunga!==null?rupiah(h.bunga):'—'}</td>
+      <td class="num">${h.nilaiSTP!==null?rupiah(h.nilaiSTP):'-'}</td>
+      <td class="num ${h.selisih!==null && Math.abs(h.selisih)<1 ? 'diff-ok':(h.selisih!==null?'diff-bad':'')}">${h.selisih!==null?rupiah(h.selisih):'-'}</td>
+      <td><button class="del-btn" data-id="${h.id}" title="Hapus">&times;</button></td>
+    </tr>
+  `).join('');
+  tbody.querySelectorAll('.del-btn').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      const id = Number(e.target.getAttribute('data-id'));
+      history = history.filter(h=>h.id!==id);
+      await saveHistory();
+      renderHistory();
+    });
+  });
+}
+
+function renderRateTable(){
+  const tbody = document.getElementById('rateBody');
+  const yms = Object.keys(rates).sort();
+  tbody.innerHTML = yms.map(ym => `
+    <tr>
+      <td>${ym}</td>
+      ${rates[ym].map(r=>`<td class="num">${pct(r)}</td>`).join('')}
+      <td><button class="del-btn" data-ym="${ym}" title="Hapus">&times;</button></td>
+    </tr>
+  `).join('');
+  tbody.querySelectorAll('.del-btn').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      const ym = e.target.getAttribute('data-ym');
+      delete rates[ym];
+      await saveRates();
+      renderRateTable();
+    });
+  });
+}
+
+document.getElementById('btnHitung').addEventListener('click', ()=>{
+  const res = computeResult();
+  if(res){ lastResult = res; renderResult(res); }
+});
+
+document.getElementById('rateToggle').addEventListener('click', (e)=>{
+  const panel = document.getElementById('ratePanel');
+  const btn = e.currentTarget;
+  panel.classList.toggle('open');
+  btn.classList.toggle('open');
+});
+
+document.getElementById('btnAddRate').addEventListener('click', async ()=>{
+  const ym = document.getElementById('addYm').value;
+  const r1 = parseFloat(document.getElementById('addR1').value);
+  const r2 = parseFloat(document.getElementById('addR2').value);
+  const r3 = parseFloat(document.getElementById('addR3').value);
+  const r4 = parseFloat(document.getElementById('addR4').value);
+  const r5 = parseFloat(document.getElementById('addR5').value);
+  if(!ym || [r1,r2,r3,r4,r5].some(isNaN)){
+    alert('Isi bulan dan kelima tarif (dalam %, contoh: 0.58 untuk 0,58%).');
+    return;
+  }
+  rates[ym] = [r1/100, r2/100, r3/100, r4/100, r5/100];
+  await saveRates();
+  renderRateTable();
+  ['addYm','addR1','addR2','addR3','addR4','addR5'].forEach(id=>document.getElementById(id).value='');
+});
+
+loadStorage();
+</script>
+</body>
+</html>
