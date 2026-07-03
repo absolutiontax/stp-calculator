@@ -297,7 +297,7 @@
     <div>
       <div class="eyebrow">Absolution Registered Tax Consultant</div>
       <h1>Kalkulator STP</h1>
-      <div class="sub">Perhitungan bunga keterlambatan pembayaran pajak berdasarkan tarif KMK bulanan</div>
+      <div class="sub">Kalkulator bunga Surat Tagihan Pajak (STP) berdasarkan tarif bunga KMK.</div>
     </div>
   </header>
 
@@ -310,7 +310,7 @@
 
       Pengguna tetap bertanggung jawab untuk melakukan verifikasi terhadap hasil perhitungan dengan mengacu pada peraturan perpajakan yang berlaku serta dokumen resmi yang diterbitkan oleh Direktorat Jenderal Pajak.
 		<div style="margin-top:15px;font-size:12px;color:#666;border-top:1px solid #ddd;padding-top:10px;">
-			<strong>Versi 1.0</strong><br>
+			<strong>Versi 1.1</strong><br>
 			Terakhir diperbarui: Juli 2026<br>
 			KMK Bunga: Juli 2026<br>
 			Logika perhitungan telah diuji menggunakan STP PPN dan PPh.
@@ -402,29 +402,33 @@
   </div>
 
   <!-- RATE TABLE -->
-  <button class="rate-toggle" id="rateToggle"><span class="arrow">&#9656;</span> Tabel Tarif KMK</button>
+  <button class="rate-toggle" id="rateToggle"><span class="arrow">&#9656;</span> Tabel Tarif Bunga KMK</button>
   <div class="card rate-panel" id="ratePanel">
-    <h2>Tarif Bunga KMK per Bulan <span class="tag">Editable</span></h2>
-    <div class="add-rate-row">
-      <div><label>Bulan (YYYY-MM)</label><input type="month" id="addYm"></div>
-      <div><label>Tarif 1 (%)</label><input type="number" step="0.0001" id="addR1"></div>
-      <div><label>Tarif 2 (%)</label><input type="number" step="0.0001" id="addR2"></div>
-      <div><label>Tarif 3 (%)</label><input type="number" step="0.0001" id="addR3"></div>
-      <div><label>Tarif 4 (%)</label><input type="number" step="0.0001" id="addR4"></div>
-      <div><label>Tarif 5 (%)</label><input type="number" step="0.0001" id="addR5"></div>
-      <button class="btn secondary" id="btnAddRate">+ Tambah / Ubah</button>
-    </div>
+    <h2>Tarif Bunga KMK per Bulan <span class="tag">Referensi Sesuai KMK Tarif Bunga DJP</span></h2>
     <div class="table-scroll">
       <table>
         <thead>
-          <tr><th>Bulan</th><th class="num">1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th><th class="num">5</th><th></th></tr>
+          <tr>
+		  <th>Bulan</th>
+		  <th class="num">1</th>
+		  <th class="num">2</th>
+		  <th class="num">3</th>
+		  <th class="num">4</th>
+		  <th class="num">5</th>
+		  </tr>
         </thead>
         <tbody id="rateBody"></tbody>
       </table>
     </div>
   </div>
 
-  <footer>© 2026 Absolution Registered Tax Consultant<br>Perhitungan dilakukan secara lokal di browser Anda. Tidak ada data yang dikirim ke server.Developed by Steffi</div>
+	<footer>
+	© 2026 Absolution Registered Tax Consultant<br>
+	Perhitungan dilakukan secara lokal di browser Anda.<br>
+	Tidak ada data yang dikirim ke server.<br><br>
+
+	Developed by <strong>Steffi</strong>
+	</footer>
 
 <script>
 const DEFAULT_RATES = {
@@ -499,9 +503,6 @@ async function initializeApp(){
   renderRateTable();
   renderHistory();
 }
-async function saveRates(){
-  try{ await window.storage.set('kmk-rates', JSON.stringify(rates)); }catch(e){}
-}
 async function saveHistory(){
   try{ await window.storage.set('stp-history', JSON.stringify(history)); }catch(e){}
 }
@@ -572,7 +573,7 @@ function renderResult(res){
 
   let warn = '';
   if(res.rate === null){
-    warn = `<div class="warn">Tarif KMK untuk periode <strong>${res.lookupYm}</strong> belum ada di tabel. Tambahkan di bagian "Tabel Tarif KMK" di bawah, lalu hitung ulang.</div>`;
+    warn = `<div class="warn">Tarif KMK untuk periode <strong>${res.lookupYm}</strong> belum tersedia. Silakan hubungi pengembang atau tunggu pembaruan aplikasi, lalu hitung ulang.</div>`;
   }
 
   let stampHtml = '';
@@ -654,20 +655,11 @@ function renderRateTable(){
   const tbody = document.getElementById('rateBody');
   const yms = Object.keys(rates).sort();
   tbody.innerHTML = yms.map(ym => `
-    <tr>
-      <td>${ym}</td>
-      ${rates[ym].map(r=>`<td class="num">${pct(r)}</td>`).join('')}
-      <td><button class="del-btn" data-ym="${ym}" title="Hapus">&times;</button></td>
-    </tr>
+	<tr>
+		<td>${ym}</td>
+		${rates[ym].map(r=>`<td class="num">${pct(r)}</td>`).join('')}
+	</tr>
   `).join('');
-  tbody.querySelectorAll('.del-btn').forEach(btn=>{
-    btn.addEventListener('click', async (e)=>{
-      const ym = e.target.getAttribute('data-ym');
-      delete rates[ym];
-      await saveRates();
-      renderRateTable();
-    });
-  });
 }
 
 document.getElementById('btnHitung').addEventListener('click', ()=>{
@@ -682,24 +674,7 @@ document.getElementById('rateToggle').addEventListener('click', (e)=>{
   btn.classList.toggle('open');
 });
 
-document.getElementById('btnAddRate').addEventListener('click', async ()=>{
-  const ym = document.getElementById('addYm').value;
-  const r1 = parseFloat(document.getElementById('addR1').value);
-  const r2 = parseFloat(document.getElementById('addR2').value);
-  const r3 = parseFloat(document.getElementById('addR3').value);
-  const r4 = parseFloat(document.getElementById('addR4').value);
-  const r5 = parseFloat(document.getElementById('addR5').value);
-  if(!ym || [r1,r2,r3,r4,r5].some(isNaN)){
-    alert('Isi bulan dan kelima tarif (dalam %, contoh: 0.58 untuk 0,58%).');
-    return;
-  }
-  rates[ym] = [r1/100, r2/100, r3/100, r4/100, r5/100];
-  await saveRates();
-  renderRateTable();
-  ['addYm','addR1','addR2','addR3','addR4','addR5'].forEach(id=>document.getElementById(id).value='');
-});
-
-loadStorage();
+initializeApp();
 </script>
 </body>
 </html>
