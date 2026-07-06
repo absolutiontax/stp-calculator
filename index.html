@@ -297,7 +297,7 @@
     <div>
       <div class="eyebrow">Absolution Registered Tax Consultant</div>
       <h1>Kalkulator STP</h1>
-      <div class="sub">Kalkulator bunga Surat Tagihan Pajak (STP) berdasarkan tarif bunga KMK.</div>
+      <div class="sub">Perhitungan bunga keterlambatan pembayaran pajak berdasarkan tarif KMK bulanan</div>
     </div>
   </header>
 
@@ -310,7 +310,7 @@
 
       Pengguna tetap bertanggung jawab untuk melakukan verifikasi terhadap hasil perhitungan dengan mengacu pada peraturan perpajakan yang berlaku serta dokumen resmi yang diterbitkan oleh Direktorat Jenderal Pajak.
 		<div style="margin-top:15px;font-size:12px;color:#666;border-top:1px solid #ddd;padding-top:10px;">
-			<strong>Versi 1.1</strong><br>
+			<strong>Versi 1.0</strong><br>
 			Terakhir diperbarui: Juli 2026<br>
 			KMK Bunga: Juli 2026<br>
 			Logika perhitungan telah diuji menggunakan STP PPN dan PPh.
@@ -402,58 +402,38 @@
   </div>
 
   <!-- RATE TABLE -->
-  <button class="rate-toggle" id="rateToggle"><span class="arrow">&#9656;</span> Tabel Tarif Bunga KMK</button>
+  <button class="rate-toggle" id="rateToggle"><span class="arrow">&#9656;</span> Tabel Tarif KMK</button>
   <div class="card rate-panel" id="ratePanel">
-    <h2>Tarif Bunga KMK per Bulan <span class="tag">Referensi Sesuai KMK Tarif Bunga DJP</span></h2>
+    <h2>Tarif Bunga KMK per Bulan <span class="tag">Editable</span></h2>
+    <div class="add-rate-row">
+      <div><label>Bulan (YYYY-MM)</label><input type="month" id="addYm"></div>
+      <div><label>Tarif 1 (%)</label><input type="number" step="0.0001" id="addR1"></div>
+      <div><label>Tarif 2 (%)</label><input type="number" step="0.0001" id="addR2"></div>
+      <div><label>Tarif 3 (%)</label><input type="number" step="0.0001" id="addR3"></div>
+      <div><label>Tarif 4 (%)</label><input type="number" step="0.0001" id="addR4"></div>
+      <div><label>Tarif 5 (%)</label><input type="number" step="0.0001" id="addR5"></div>
+      <button class="btn secondary" id="btnAddRate">+ Tambah / Ubah</button>
+    </div>
     <div class="table-scroll">
       <table>
         <thead>
-          <tr>
-		  <th>Bulan</th>
-		  <th class="num">1</th>
-		  <th class="num">2</th>
-		  <th class="num">3</th>
-		  <th class="num">4</th>
-		  <th class="num">5</th>
-		  </tr>
+          <tr><th>Bulan</th><th class="num">1</th><th class="num">2</th><th class="num">3</th><th class="num">4</th><th class="num">5</th><th></th></tr>
         </thead>
         <tbody id="rateBody"></tbody>
       </table>
     </div>
   </div>
 
-	<footer>
-	© 2026 Absolution Registered Tax Consultant<br>
-	Perhitungan dilakukan secara lokal di browser Anda.<br>
-	Tidak ada data yang dikirim ke server.<br><br>
+  <footer>© 2026 Absolution Registered Tax Consultant<br>Perhitungan dilakukan secara lokal di browser Anda. Tidak ada data yang dikirim ke server.Developed by Steffi</footer>
 
-	Developed by <strong>Steffi</strong>
-	</footer>
-
-<script>
-const DEFAULT_RATES = {
-  "2025-01":[0.0058,0.0100,0.0141,0.0183,0.0225],
-  "2025-02":[0.0059,0.0101,0.0143,0.0184,0.0226],
-  "2025-03":[0.0057,0.0099,0.0141,0.0182,0.0224],
-  "2025-04":[0.0058,0.0100,0.0141,0.0183,0.0225],
-  "2025-05":[0.0058,0.0100,0.0142,0.0183,0.0225],
-  "2025-06":[0.0057,0.0099,0.0141,0.0182,0.0224],
-  "2025-07":[0.0058,0.0100,0.0141,0.0183,0.0225],
-  "2025-08":[0.0055,0.0096,0.0138,0.0180,0.0221],
-  "2025-09":[0.0054,0.0095,0.0137,0.0179,0.0220],
-  "2025-10":[0.0053,0.0095,0.0136,0.0178,0.0220],
-  "2025-11":[0.0051,0.0092,0.0134,0.0176,0.0217],
-  "2025-12":[0.0051,0.0093,0.0135,0.0176,0.0218],
-  "2026-01":[0.0052,0.0093,0.0135,0.0177,0.0218],
-  "2026-02":[0.0051,0.0092,0.0134,0.0176,0.0217],
-  "2026-03":[0.0053,0.0095,0.0137,0.0178,0.0220],
-  "2026-04":[0.0056,0.0098,0.0139,0.0181,0.0223],
-  "2026-05":[0.0055,0.0097,0.0139,0.0180,0.0222],
-  "2026-06":[0.0056,0.0098,0.0139,0.0181,0.0223],
-  "2026-07":[0.0058,0.0100,0.0142,0.0183,0.0225]
-};
-
-let rates = {};
+<script type="module">
+import {
+    loadRates,
+    getRate,
+    getAllRates,
+    setRate,
+	deleteRate
+} from "./js/interestRates.js";
 let history = [];
 
 function rupiah(n){
@@ -480,18 +460,11 @@ function monthsBetween(start,end){
 
 async function initializeApp(){
   try{
-    const response = await fetch('kmk.json');
+	await loadRates();
 
-    if(!response.ok){
-      throw new Error('Failed to load KMK data');
-    }
-
-    rates = await response.json();
-
-  }catch(e){
+}catch(e){
     console.error(e);
-    rates = {...DEFAULT_RATES};
-  }
+}
 
   try{
     const h = await window.storage.get('stp-history');
@@ -502,6 +475,9 @@ async function initializeApp(){
 
   renderRateTable();
   renderHistory();
+}
+async function saveRates(){
+  try{ await window.storage.set('kmk-rates', JSON.stringify(getAllRates())); }catch(e){}
 }
 async function saveHistory(){
   try{ await window.storage.set('stp-history', JSON.stringify(history)); }catch(e){}
@@ -549,8 +525,7 @@ function computeResult(){
     ? new Date(dueDate.getFullYear(), dueDate.getMonth()+1, 1)
     : new Date(dueDate.getFullYear(), dueDate.getMonth(), 1);
   const lookupYm = ymOf(lookupDate);
-  const rateRow = rates[lookupYm];
-  const rate = rateRow ? rateRow[sanksi-1] : null;
+  const rate = getRate(lookupYm, sanksi);
 
   const bunga = (rate !== null) ? pokok * monthsLate * rate : null;
   const selisih = (nilaiSTP !== null && bunga !== null) ? (nilaiSTP - bunga) : null;
@@ -573,7 +548,7 @@ function renderResult(res){
 
   let warn = '';
   if(res.rate === null){
-    warn = `<div class="warn">Tarif KMK untuk periode <strong>${res.lookupYm}</strong> belum tersedia. Silakan hubungi pengembang atau tunggu pembaruan aplikasi, lalu hitung ulang.</div>`;
+    warn = `<div class="warn">Tarif KMK untuk periode <strong>${res.lookupYm}</strong> belum tersedia. Coba perbarui data tarif atau tunggu pembaruan KMK.</div>`;
   }
 
   let stampHtml = '';
@@ -653,13 +628,23 @@ function renderHistory(){
 
 function renderRateTable(){
   const tbody = document.getElementById('rateBody');
+  const rates = getAllRates();
   const yms = Object.keys(rates).sort();
   tbody.innerHTML = yms.map(ym => `
-	<tr>
-		<td>${ym}</td>
-		${rates[ym].map(r=>`<td class="num">${pct(r)}</td>`).join('')}
-	</tr>
+    <tr>
+      <td>${ym}</td>
+      ${rates[ym].map(r=>`<td class="num">${pct(r)}</td>`).join('')}
+      <td><button class="del-btn" data-ym="${ym}" title="Hapus">&times;</button></td>
+    </tr>
   `).join('');
+  tbody.querySelectorAll('.del-btn').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      const ym = e.target.getAttribute('data-ym');
+      deleteRate(ym);
+      await saveRates();
+      renderRateTable();
+    });
+  });
 }
 
 document.getElementById('btnHitung').addEventListener('click', ()=>{
@@ -672,6 +657,29 @@ document.getElementById('rateToggle').addEventListener('click', (e)=>{
   const btn = e.currentTarget;
   panel.classList.toggle('open');
   btn.classList.toggle('open');
+});
+
+document.getElementById('btnAddRate').addEventListener('click', async ()=>{
+  const ym = document.getElementById('addYm').value;
+  const r1 = parseFloat(document.getElementById('addR1').value);
+  const r2 = parseFloat(document.getElementById('addR2').value);
+  const r3 = parseFloat(document.getElementById('addR3').value);
+  const r4 = parseFloat(document.getElementById('addR4').value);
+  const r5 = parseFloat(document.getElementById('addR5').value);
+  if(!ym || [r1,r2,r3,r4,r5].some(isNaN)){
+    alert('Isi bulan dan kelima tarif (dalam %, contoh: 0.58 untuk 0,58%).');
+    return;
+  }
+  setRate(ym, [
+    r1/100,
+    r2/100,
+    r3/100,
+    r4/100,
+    r5/100
+]);
+  await saveRates();
+  renderRateTable();
+  ['addYm','addR1','addR2','addR3','addR4','addR5'].forEach(id=>document.getElementById(id).value='');
 });
 
 initializeApp();
