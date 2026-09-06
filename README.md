@@ -1,10 +1,10 @@
-# STP Calculator
+# Tax Sanction Calculator
 
 ![Version](https://img.shields.io/badge/version-v1.0-blue)
 ![Status](https://img.shields.io/badge/status-active-success)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-Kalkulator bunga Surat Tagihan Pajak (STP) berdasarkan tarif KMK.
+Kalkulator Sanksi Denda Pajak berdasarkan tarif KMK.
 
 🌐 **Live Demo**
 
@@ -15,8 +15,8 @@ https://absolutiontax.github.io/stp-calculator/
 ## Fitur
 
 - Perhitungan bunga STP secara otomatis
-- Mendukung perhitungan STP PPN
-- Mendukung perhitungan STP PPh
+- Mendukung perhitungan STP PPN, PPh, SPT Tahunan
+- Mendukung perhitungan SKP
 - Perhitungan jumlah bulan keterlambatan
 - Tarif bunga berdasarkan KMK yang berlaku
 - Riwayat perhitungan
@@ -79,11 +79,11 @@ Pengguna tetap bertanggung jawab untuk melakukan verifikasi hasil perhitungan be
 
 ## Versi
 
-**v1.0**
+**v1.1**
 
 - Perhitungan STP PPN
 - Perhitungan STP PPh
-- Tarif KMK dapat diperbarui
+- Tarif KMK diperbaharui setiap bulan
 - Riwayat perhitungan
 
 ---
