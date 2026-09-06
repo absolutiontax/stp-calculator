@@ -323,51 +323,176 @@
     <div class="card">
       <h2>Data Pajak <span class="tag">Input</span></h2>
 
-      <div class="row2">
-        <div class="field">
-          <label>Jenis Pajak</label>
-          <select id="jenisPajak">
-            <option value="PPN">PPN</option>
-            <option value="OTHER">PPh</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>No. STP (opsional)</label>
-          <input type="text" id="noSTP" placeholder="00xxx/107/25/...">
-        </div>
-      </div>
+		 <div class="row2">
 
-      <div class="row2">
-        <div class="field">
-          <label>Masa Pajak</label>
-          <input type="month" id="masaPajak">
-        </div>
-        <div class="field">
-          <label>Tanggal Bayar</label>
-          <input type="date" id="tglBayar">
-        </div>
-      </div>
+		  <div class="field">
+			<label>Jenis Pajak</label>
 
-      <div class="field">
-        <label>Pokok (Rp)</label>
-        <input type="number" id="pokok" placeholder="0" min="0" step="1">
-      </div>
+			<select id="jenisPajak">
 
-      <div class="field">
-        <label>Jenis Bunga / Sanksi</label>
-        <select id="jenisSanksi">
-          <option value="1">1 — Pasal 19 ayat (1)-(3)</option>
-          <option value="2" selected>2 — Pasal 8 ayat (2),(2a), Pasal 9 ayat (2a),(2b), Pasal 14 ayat (3)</option>
-          <option value="3">3 — Pasal 8 ayat (5)</option>
-          <option value="4">4 — Pasal 13 ayat (2) dan (2a)</option>
-          <option value="5">5 — Pasal 13 ayat (3b)</option>
-        </select>
-      </div>
+			  <option value="PPh21">
+				PPh 21
+			  </option>
 
-      <div class="field">
-        <label>Nilai STP Aktual dari Surat (opsional, untuk cek selisih)</label>
-        <input type="number" id="nilaiSTP" placeholder="0" min="0" step="1">
-      </div>
+			  <option value="UNIFIKASI">
+				PPh Unifikasi
+			  </option>
+
+			  <option value="PPh25">
+				PPh 25
+			  </option>
+
+			  <option value="PPN">
+				PPN
+			  </option>
+
+			  <option value="TAHUNAN">
+				SPT Tahunan
+			  </option>
+
+			</select>
+		  </div>
+
+
+		  <div class="field">
+
+			<label>Jenis Sanksi</label>
+
+			<select id="jenisSanksi">
+
+			  <option value="telat-bayar">
+				Telat Bayar
+			  </option>
+
+			  <option value="pembetulan">
+				Pembetulan
+			  </option>
+
+			  <option value="skpkb">
+				SKPKB
+			  </option>
+
+			  <option value="ketidakbenaran">
+				Pengungkapan Ketidakbenaran
+			  </option>
+
+			  <option value="stp-kekurangan">
+				STP atas Kekurangan Pajak
+			  </option>
+
+			  <option value="kekurangan-skp">
+				Kekurangan Pajak atas SKP
+			  </option>
+
+			  <option value="angsuran-pph29">
+				Angsuran Hutang Pajak
+			  </option>
+
+			  <option value="penundaan-spt">
+				Penundaan Penyampaian SPT
+			  </option>
+
+			  <option value="skpkb-kurang-potong">
+				SKPKB Kurang Potong / Pungut
+			  </option>
+
+			</select>
+
+		  </div>
+
+		</div>
+
+
+		<div
+		  class="row2"
+		  id="taxpayerTypeRow"
+		  style="display:none;"
+		>
+
+		  <div class="field">
+
+			<label>Jenis Wajib Pajak</label>
+
+			<select id="taxpayerType">
+
+			  <option value="OP">
+				Orang Pribadi
+			  </option>
+
+			  <option value="BADAN">
+				Badan
+			  </option>
+
+			</select>
+
+		  </div>
+
+		</div>
+
+
+		<div class="row2">
+
+		  <div class="field">
+
+			<label id="masaLabel">
+			  Masa Pajak
+			</label>
+
+			<input
+			  type="month"
+			  id="masaPajak"
+			>
+
+		  </div>
+
+
+		  <div class="field">
+
+			<label id="endDateLabel">
+			  Tanggal Pembayaran
+			</label>
+
+			<input
+			  type="date"
+			  id="tglBayar"
+			>
+
+		  </div>
+
+		</div>
+
+
+		<div class="field">
+
+		  <label>Pokok Pajak (Rp)</label>
+
+		  <input
+			type="number"
+			id="pokok"
+			placeholder="0"
+			min="0"
+			step="1"
+		  >
+
+		</div>
+
+
+		<div class="field">
+
+		  <label>
+			Nilai STP / SKP Aktual
+			(opsional, untuk cek selisih)
+		  </label>
+
+		  <input
+			type="number"
+			id="nilaiSTP"
+			placeholder="0"
+			min="0"
+			step="1"
+		  >
+
+		</div>
 
       <button class="btn" id="btnHitung">Hitung Bunga</button>
     </div>
@@ -434,6 +559,11 @@ import {
     setRate,
 	deleteRate
 } from "./js/interestRates.js";
+
+import {
+    calculateSanction
+} from "./js/calculator.js";
+
 let history = [];
 
 function rupiah(n){
@@ -492,102 +622,403 @@ function calcDueDate(jenis, masaDate){
   return d;
 }
 
-function computeResult(){
-  const jenis = document.getElementById('jenisPajak').value;
-  const noSTP = document.getElementById('noSTP').value;
-  const masaVal = document.getElementById('masaPajak').value;
-  const bayarVal = document.getElementById('tglBayar').value;
-  const pokok = parseFloat(document.getElementById('pokok').value);
-  const sanksi = parseInt(document.getElementById('jenisSanksi').value,10);
-  const nilaiSTPInput = document.getElementById('nilaiSTP').value;
-  const nilaiSTP = nilaiSTPInput === '' ? null : parseFloat(nilaiSTPInput);
+function computeResult() {
 
-  if(!masaVal || !bayarVal || isNaN(pokok)){
-    alert('Lengkapi Masa Pajak, Tanggal Bayar, dan Pokok terlebih dahulu.');
-    return null;
-  }
+    const jenisPajak =
+        document.getElementById(
+            "jenisPajak"
+        ).value;
 
-  const [my, mm] = masaVal.split('-').map(Number);
-  const masaDate = new Date(my, mm-1, 1);
-  const bayarDate = new Date(bayarVal + 'T00:00:00');
 
-  const dueDate = calcDueDate(jenis, masaDate);
+    const jenisSanksi =
+        document.getElementById(
+            "jenisSanksi"
+        ).value;
 
-  let monthsLate = 0;
-  if(bayarDate >= dueDate){
-    monthsLate = monthsBetween(dueDate, bayarDate) + 1;
-  }
 
-  // PPN: rate is taken from the month after the due date's month.
-  // Other tax types: the due date already falls within the first late month,
-  // so the rate is taken from the due date's own month.
-  const lookupDate = (jenis === 'PPN')
-    ? new Date(dueDate.getFullYear(), dueDate.getMonth()+1, 1)
-    : new Date(dueDate.getFullYear(), dueDate.getMonth(), 1);
-  const lookupYm = ymOf(lookupDate);
-  const rate = getRate(lookupYm, sanksi);
+    const taxpayerType =
+        document.getElementById(
+            "taxpayerType"
+        ).value;
 
-  const bunga = (rate !== null) ? pokok * monthsLate * rate : null;
-  const selisih = (nilaiSTP !== null && bunga !== null) ? (nilaiSTP - bunga) : null;
 
-  return {
-    id: Date.now(),
-    jenis, noSTP, masaYm: masaVal, bayarVal,
-    pokok, sanksi, dueDate: dueDate.toISOString(), bayarDate: bayarDate.toISOString(),
-    monthsLate, rate, bunga, nilaiSTP, selisih, lookupYm
-  };
+    const masaValue =
+        document.getElementById(
+            "masaPajak"
+        ).value;
+
+
+    const endDateValue =
+        document.getElementById(
+            "tglBayar"
+        ).value;
+
+
+    const pokok = Number(
+
+		document.getElementById(
+			"pokok"
+		).value
+
+	);
+
+
+	const nilaiSTP = Number(
+
+		document.getElementById(
+			"nilaiSTP"
+		).value
+
+	);
+
+
+    if (!masaValue) {
+
+        throw new Error(
+            "Pilih Masa / Tahun Pajak terlebih dahulu."
+        );
+
+    }
+
+
+    if (!endDateValue) {
+
+        throw new Error(
+            "Pilih tanggal terlebih dahulu."
+        );
+
+    }
+
+
+    if (!pokok || pokok <= 0) {
+
+        throw new Error(
+            "Masukkan Pokok Pajak."
+        );
+
+    }
+
+
+    /*
+    Convert Masa Pajak
+
+    <input type="month">
+    Example:
+    2024-05
+    */
+
+    const masaDate =
+        new Date(
+            masaValue + "-01T00:00:00"
+        );
+
+
+    /*
+    Convert End Date
+    */
+
+    const endDate =
+        new Date(
+            endDateValue + "T00:00:00"
+        );
+
+
+    /*
+    Calculate
+    */
+
+    const result =
+        calculateSanction({
+
+            jenisPajak,
+
+            jenisSanksi,
+
+            taxpayerType,
+
+            masaDate,
+
+            endDate,
+
+            pokok
+
+        });
+
+
+    /*
+    Keep the old structure temporarily
+    so the existing result UI
+    can still display something.
+    */
+
+	return {
+
+		...result,
+
+		bunga: result.sanction,
+
+		nilaiSTP:
+			nilaiSTP > 0
+				? nilaiSTP
+				: null,
+
+		selisih:
+			nilaiSTP > 0 &&
+			result.sanction !== null
+
+				? result.sanction - nilaiSTP
+				: null,
+
+		total:
+			pokok +
+			result.sanction
+
+	};
+
 }
 
 let lastResult = null;
 
-function renderResult(res){
-  const body = document.getElementById('resultBody');
-  const tag = document.getElementById('resultTag');
-  if(!res){ return; }
-  tag.textContent = res.jenis === 'PPN' ? 'PPN' : 'PPh / Lainnya';
+function renderResult(res) {
 
-  let warn = '';
-  if(res.rate === null){
-    warn = `<div class="warn">Tarif KMK untuk periode <strong>${res.lookupYm}</strong> belum tersedia. Coba perbarui data tarif atau tunggu pembaruan KMK.</div>`;
-  }
+    const body =
+        document.getElementById(
+            "resultBody"
+        );
 
-  let stampHtml = '';
-  if(res.selisih !== null){
-    const isGood = Math.abs(res.selisih) < 1;
-    stampHtml = `
-      <div class="stamp-zone">
-        <div class="stamp ${isGood?'good':''}">
-          <div class="txt">${isGood ? 'SESUAI' : 'ADA<br>SELISIH'}</div>
+    const tag =
+        document.getElementById(
+            "resultTag"
+        );
+
+    if (!res) {
+
+        return;
+
+    }
+
+
+    tag.textContent =
+
+        res.jenisPajak === "PPN"
+
+            ? "PPN"
+
+            : "PPh / Lainnya";
+
+
+    let warn = "";
+
+    if (res.rate === null) {
+
+        warn = `
+            <div class="warn">
+
+                Tarif KMK untuk periode
+
+                <strong>
+                    ${res.rateReference}
+                </strong>
+
+                belum tersedia.
+
+            </div>
+        `;
+
+    }
+
+
+    let stampHtml = "";
+
+    if (res.selisih !== null) {
+
+        const isGood =
+            Math.abs(
+                res.selisih
+            ) < 1;
+
+
+        stampHtml = `
+
+            <div class="stamp-zone">
+
+                <div class="stamp ${isGood ? "good" : ""}">
+
+                    <div class="txt">
+
+                        ${isGood
+                            ? "SESUAI"
+                            : "ADA<br>SELISIH"
+                        }
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+    body.innerHTML = `
+
+        <div class="ledger-row">
+
+            <span class="k">
+                Tanggal Jatuh Tempo
+            </span>
+
+            <span class="v">
+                ${fmtDate(
+                    new Date(res.dueDate)
+                )}
+            </span>
+
         </div>
-      </div>`;
-  }
 
-  body.innerHTML = `
-    <div class="ledger-row"><span class="k">Tanggal Jatuh Tempo</span><span class="v">${fmtDate(new Date(res.dueDate))}</span></div>
-    <div class="ledger-row"><span class="k">Jumlah Bulan Terlambat</span><span class="v">${res.monthsLate}</span></div>
-    <div class="ledger-row">
-    <span class="k">Tarif Bunga (${res.sanksi})</span>
-    <span class="v">${res.rate!==null?pct(res.rate):'—'}</span>
-	</div>
 
-	<div class="ledger-row">
-		<span class="k">Dasar Tarif KMK</span>
-		<span class="v">${res.lookupYm}</span>
-	</div>
-    <div class="ledger-row total"><span class="k">Bunga</span><span class="v">${res.bunga!==null?rupiah(res.bunga):'—'}</span></div>
-    ${res.nilaiSTP!==null ? `
-    <div class="ledger-row"><span class="k">Nilai STP Aktual</span><span class="v">${rupiah(res.nilaiSTP)}</span></div>
-    <div class="ledger-row"><span class="k">Selisih</span><span class="v ${Math.abs(res.selisih)<1?'diff-ok':'diff-bad'}">${rupiah(res.selisih)}</span></div>
-    ` : ''}
-    ${warn}
-    ${stampHtml}
-    <button class="btn secondary" id="btnSimpan" ${res.bunga===null?'disabled':''}>Simpan ke Riwayat</button>
-  `;
-  document.getElementById('btnSimpan').addEventListener('click', async ()=>{
-    history.unshift(res);
-    await saveHistory();
-    renderHistory();
-  });
+        <div class="ledger-row">
+
+            <span class="k">
+                Jumlah Bulan Terlambat
+            </span>
+
+            <span class="v">
+                ${res.months}
+            </span>
+
+        </div>
+
+
+        <div class="ledger-row">
+
+            <span class="k">
+                Tarif Bunga (${res.pasal})
+            </span>
+
+            <span class="v">
+
+                ${res.rate !== null
+                    ? pct(res.rate)
+                    : "—"
+                }
+
+            </span>
+
+        </div>
+
+
+        <div class="ledger-row">
+
+            <span class="k">
+                Dasar Tarif KMK
+            </span>
+
+            <span class="v">
+                ${res.rateReference}
+            </span>
+
+        </div>
+
+
+        <div class="ledger-row total">
+
+            <span class="k">
+                Bunga
+            </span>
+
+            <span class="v">
+
+                ${res.bunga !== null
+                    ? rupiah(res.bunga)
+                    : "—"
+                }
+
+            </span>
+
+        </div>
+
+
+        ${res.nilaiSTP !== null ? `
+
+            <div class="ledger-row">
+
+                <span class="k">
+                    Nilai STP Aktual
+                </span>
+
+                <span class="v">
+                    ${rupiah(res.nilaiSTP)}
+                </span>
+
+            </div>
+
+
+            <div class="ledger-row">
+
+                <span class="k">
+                    Selisih
+                </span>
+
+                <span class="v ${Math.abs(res.selisih) < 1
+                    ? "diff-ok"
+                    : "diff-bad"
+                }">
+
+                    ${rupiah(res.selisih)}
+
+                </span>
+
+            </div>
+
+        ` : ""}
+
+
+        ${warn}
+
+
+        ${stampHtml}
+
+
+        <button
+            class="btn secondary"
+            id="btnSimpan"
+
+            ${res.bunga === null
+                ? "disabled"
+                : ""
+            }
+        >
+
+            Simpan ke Riwayat
+
+        </button>
+
+    `;
+
+
+    document
+        .getElementById(
+            "btnSimpan"
+        )
+        .addEventListener(
+
+            "click",
+
+            async () => {
+
+                history.unshift(res);
+
+                await saveHistory();
+
+                renderHistory();
+
+            }
+
+        );
+
 }
 
 function renderHistory(){
@@ -681,6 +1112,97 @@ document.getElementById('btnAddRate').addEventListener('click', async ()=>{
   renderRateTable();
   ['addYm','addR1','addR2','addR3','addR4','addR5'].forEach(id=>document.getElementById(id).value='');
 });
+
+function updateFormLabels() {
+
+    const jenisPajak =
+        document.getElementById(
+            "jenisPajak"
+        ).value;
+
+    const jenisSanksi =
+        document.getElementById(
+            "jenisSanksi"
+        ).value;
+
+
+    const taxpayerTypeRow =
+        document.getElementById(
+            "taxpayerTypeRow"
+        );
+
+
+    const masaLabel =
+        document.getElementById(
+            "masaLabel"
+        );
+
+
+    const endDateLabel =
+        document.getElementById(
+            "endDateLabel"
+        );
+
+
+    /*
+    Tahunan
+    */
+
+    if (jenisPajak === "TAHUNAN") {
+
+        taxpayerTypeRow.style.display =
+            "block";
+
+        masaLabel.textContent =
+            "Tahun Pajak";
+
+    } else {
+
+        taxpayerTypeRow.style.display =
+            "none";
+
+        masaLabel.textContent =
+            "Masa Pajak";
+
+    }
+
+
+    /*
+    SKPKB
+    */
+
+    if (jenisSanksi === "skpkb") {
+
+        endDateLabel.textContent =
+            "Tanggal Penerbitan SKPKB";
+
+    } else {
+
+        endDateLabel.textContent =
+            "Tanggal Pembayaran";
+
+    }
+
+}
+
+
+document
+    .getElementById("jenisPajak")
+    .addEventListener(
+        "change",
+        updateFormLabels
+    );
+
+
+document
+    .getElementById("jenisSanksi")
+    .addEventListener(
+        "change",
+        updateFormLabels
+    );
+
+
+updateFormLabels();
 
 initializeApp();
 </script>

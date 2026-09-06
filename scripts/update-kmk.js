@@ -3,7 +3,6 @@ const cheerio = require("cheerio");
 const fs = require("fs");
 const FIRST_YEAR = 2020;
 const FIRST_MONTH = 12;
-const EXPECTED_MIN_PERIODS = 60;
 const MONTH_MAP = {
     Januari: "01",
     Februari: "02",
@@ -83,7 +82,7 @@ async function fetchMonth(date){
 
 	});
 
-	if (rates.length !== 5) {
+	if (rates.length < 4 || rates.length > 5) {
 
 		throw new Error(
 			`Expected 5 interest rates for ${period}, but found ${rates.length}.`
@@ -98,52 +97,105 @@ async function fetchMonth(date){
 
 }
 
-async function buildRatesDatabase() {
+function getNextMonth(period) {
 
-    const database = {};
+    const [year, month] =
+        period.split("-").map(Number);
 
-    const now = new Date();
+    const date =
+        new Date(year, month, 1);
 
-    const totalMonths =
-        (now.getFullYear() - FIRST_YEAR) * 12 +
+    return {
+        year: date.getFullYear(),
+        month: date.getMonth() + 1
+    };
+
+}
+
+async function buildRatesDatabase(oldDatabase) {
+
+    const database =
+        { ...oldDatabase };
+
+    const periods =
+        Object.keys(database).sort();
+
+    if (!periods.length) {
+
+        throw new Error(
+            "KMK database is empty."
+        );
+
+    }
+
+    const latestPeriod =
+        periods[periods.length - 1];
+
+    let { year, month } =
+        getNextMonth(latestPeriod);
+
+    const now =
+        new Date();
+
+    const currentYear =
+        now.getFullYear();
+
+    const currentMonth =
         now.getMonth() + 1;
 
-    let current = 0;
+    console.log(
+        `\nLatest period in database: ${latestPeriod}`
+    );
 
-    console.log("\nBuilding KMK database...\n");
+    console.log(
+        "Checking for missing KMK periods...\n"
+    );
 
-    for (let year = FIRST_YEAR; year <= now.getFullYear(); year++) {
+    while (
+        year < currentYear ||
+        (
+            year === currentYear &&
+            month <= currentMonth
+        )
+    ) {
 
-        const startMonth = (year === FIRST_YEAR) ? FIRST_MONTH : 1;
-        const endMonth = (year === now.getFullYear())
-            ? now.getMonth() + 1
-            : 12;
+        const date =
+            formatDate(year, month);
 
-        for (let month = startMonth; month <= endMonth; month++) {
+        process.stdout.write(
+            `Fetching ${date.substring(0, 7)}... `
+        );
 
-            current++;
+        try {
 
-            const date = formatDate(year, month);
+            const result =
+                await fetchMonth(date);
 
-            process.stdout.write(
-                `[${current}/${totalMonths}] ${date.substring(0, 7)}... `
+            database[result.period] =
+                result.rates;
+
+            console.log("✓");
+
+        } catch (err) {
+
+            console.log("✗");
+
+            console.error(
+                `   Failed to fetch ${date}`
             );
 
-            try {
+            console.error(
+                `   ${err.message}`
+            );
 
-                const result = await fetchMonth(date);
+        }
 
-                database[result.period] = result.rates;
+        month++;
 
-                console.log("✓");
+        if (month > 12) {
 
-            } catch (err) {
-
-                console.log("✗");
-                console.error(`   Failed to fetch ${date}`);
-                console.error(`   ${err.message}`);
-
-            }
+            month = 1;
+            year++;
 
         }
 
@@ -268,7 +320,7 @@ async function main(){
 	const startTime = Date.now();
 	const oldDatabase = loadCurrentDatabase();
 
-	const newDatabase = await buildRatesDatabase();
+	const newDatabase = await buildRatesDatabase(oldDatabase);
 	
 	const changes = compareDatabase(oldDatabase, newDatabase);
 
@@ -280,16 +332,14 @@ async function main(){
     changes.removed.length > 0;
 
 	if (hasChanges) {
-		if (Object.keys(newDatabase).length < EXPECTED_MIN_PERIODS) {
 
-		throw new Error(
-			"Database looks incomplete. Aborting save."
-			);
-
-		}
 		saveDatabase(newDatabase);
 
 		console.log("\n✓ kmk.json updated successfully.");
+		console.log("✓ Review the changes and run:");
+		console.log("    git add .");
+		console.log('    git commit -m "chore: update KMK rates"');
+		console.log("    git push");
 
 	} else {
 
