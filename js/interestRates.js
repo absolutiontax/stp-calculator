@@ -5,7 +5,12 @@ let rates = {};
 // Load KMK data
 export async function loadRates() {
     try {
-        const response = await fetch("kmk.json");
+        const response = await fetch(
+			"kmk.json",
+			{
+				cache: "no-store"
+			}
+		);
 
         if (!response.ok) {
             throw new Error("Failed to load KMK data");
