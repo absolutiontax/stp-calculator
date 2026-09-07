@@ -462,6 +462,7 @@
 			<input
 			  type="date"
 			  id="tglBayar"
+			  max="9999-12-31"
 			>
 
 		  </div>
@@ -792,11 +793,28 @@ function computeResult() {
     2024-05
     */
 
-    const masaDate =
-        new Date(
-            masaValue + "-01T00:00:00"
-        );
+	let masaDate;
 
+	if (jenisPajak === "TAHUNAN") {
+
+		if (!/^\d{4}$/.test(masaValue)) {
+			alert("Tahun Pajak harus terdiri dari 4 digit.");
+			return;
+		}
+
+		masaDate = new Date(
+			Number(masaValue),
+			11,
+			1
+		);
+
+	} else {
+
+		masaDate = new Date(
+			masaValue + "-01T00:00:00"
+		);
+
+	}
 
     /*
     Convert End Date
@@ -1224,23 +1242,31 @@ function updateFormLabels() {
     Tahunan
     */
 
-    if (jenisPajak === "TAHUNAN") {
+const masaInput =
+    document.getElementById(
+        "masaPajak"
+    );
 
-        taxpayerTypeRow.style.display =
-            "block";
 
-        masaLabel.textContent =
-            "Tahun Pajak";
+	if (jenisPajak === "TAHUNAN") {
+		taxpayerTypeRow.style.display = "block";
+		masaLabel.textContent = "Tahun Pajak";
 
-    } else {
+		masaInput.type = "text";
+		masaInput.inputMode = "numeric";
+		masaInput.placeholder = "YYYY";
+		masaInput.maxLength = 4;
+		masaInput.pattern = "\\d{4}";
 
-        taxpayerTypeRow.style.display =
-            "none";
-
-        masaLabel.textContent =
-            "Masa Pajak";
-
-    }
+	} else {
+		taxpayerTypeRow.style.display = "none";
+		masaLabel.textContent = "Masa Pajak";
+		masaInput.type = "month";
+		masaInput.placeholder = "";
+		masaInput.removeAttribute("min");
+		masaInput.removeAttribute("max");
+		masaInput.removeAttribute("step");
+	}
 
 
     /*

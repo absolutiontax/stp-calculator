@@ -80,6 +80,15 @@ const CALCULATION_RULES = {
 
         },
 
+		"skpkb": {
+
+			pasal: "13(2)",
+			rateRow: 4,
+			endType: "skpkb",
+			dueDateType: "masa"
+
+		},
+
         "skpkb-kurang-potong": {
 
             pasal: "13(3b)",
@@ -121,6 +130,15 @@ const CALCULATION_RULES = {
             rateRow: 1
 
         },
+
+		"skpkb": {
+
+			pasal: "13(2)",
+			rateRow: 4,
+			endType: "skpkb",
+			dueDateType: "masa"
+
+		},
 
         "skpkb-kurang-potong": {
 
